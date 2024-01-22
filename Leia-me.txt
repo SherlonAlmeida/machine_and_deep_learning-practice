@@ -1,0 +1,13 @@
+Criar um ambiente virtual
+    python -m venv ./ambiente_virtual
+
+Habilitar ambiente virtual:
+    ambiente_virtual/Scripts/Activate
+
+Desabilitar Ambiente Virtual:
+    deactivate
+
+Tutorial:https://blog.paperspace.com/getting-started-with-openai-gym/
+Instalar OpenAI Gym
+    pip install -U gym
+    
