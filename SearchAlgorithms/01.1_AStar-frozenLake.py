@@ -119,9 +119,29 @@ def get_path_1D(path_2D, m, n):
         p = i*n+j
         path_1D.append(p)
     return path_1D
+
+"""Converte o caminho em movimentos ◀️LEFT=0, 🔽DOWN=1, ▶️RIGHT=2, 🔼UP=3"""
+def get_moves_from_path(path_2D):
+    moves = []
+    for idx in range(len(path_2D)-1):
+        curr_state_x, curr_state_y = path_2D[idx]
+        next_state_x, next_state_y = path_2D[idx+1]
+        if (next_state_x > curr_state_x):
+            print("Baixo")
+            moves.append(1)
+        elif (next_state_x < curr_state_x):
+            print("Cima")
+            moves.append(3)
+        elif (next_state_y > curr_state_y):
+            print("Direita")
+            moves.append(2)
+        elif (next_state_y < curr_state_y):
+            print("Esquerda")
+            moves.append(0)
+    return moves
     
 
-maze = frozen_lake_maps["4x4"] #Get the created map from config_games.py
+maze = frozen_lake_maps["4x4"].copy() #Get the created map from config_games.py
 maze = preprocess_map(maze)  #Get the "0's and 1's" map formatted
 
 #Actions:          ◀️LEFT=0, 🔽DOWN=1, ▶️RIGHT=2, 🔼UP=3
@@ -138,16 +158,15 @@ print(path_2D)
 path_1D = get_path_1D(path_2D, m, n)
 print(path_1D)
 
+#Movimentos necessários considerando ◀️ LEFT = 0, 🔽 DOWN = 1, ▶️ RIGHT = 2, 🔼 UP = 3
+next_moves = get_moves_from_path(path_2D)
 
-
+#Testa o caminho aprendido com o A*
 my_map = frozen_lake_maps["4x4"] #Get the created map from config_games.py
-env = gym.make('FrozenLake-v1', desc=my_map, render_mode="human") # try for different environments
-observation = env.reset()
+env = gym.make('FrozenLake-v1', desc=my_map, is_slippery=False, render_mode="human") # try for different environments
+state, _ = env.reset()
 
-#Falta converter o PATH em MOVEMENTS de [0, 1, 2, 3]
-
-for t, action in enumerate(1, path_1D):
-    env.render()
+for t, action in enumerate(next_moves):
     observation, reward, done, info, _ = env.step(action)
     print (t, action, observation, reward, done, info)
     
