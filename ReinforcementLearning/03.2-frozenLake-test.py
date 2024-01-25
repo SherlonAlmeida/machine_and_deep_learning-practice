@@ -1,9 +1,12 @@
 import gym
 import numpy as np
 import random
+from config_games import *
+
+my_map = frozen_lake_maps["4x4"] #Get the created map from config_games.py
 
 # 1. Load Environment and Q-table structure
-env = gym.make('FrozenLake-v1', is_slippery=False, render_mode="human") # try for different environments
+env = gym.make('FrozenLake-v1', desc=my_map, is_slippery=False, render_mode="human") # try for different environments
 
 # 1.1 The env.observation.n, env.action_space.n gives number of states and action in env loaded
 action_size = env.action_space.n     #Number of possible actions, in this case Up, Down, Left, Right = 4 actions

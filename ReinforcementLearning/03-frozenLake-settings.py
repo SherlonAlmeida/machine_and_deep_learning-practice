@@ -2,12 +2,14 @@
 
 import gym
 import numpy as np
+from config_games import *
 
 def get_action(t):
     action = env.action_space.sample() #Random
     return action
 
-env = gym.make('FrozenLake-v1', render_mode="human") # try for different environments
+my_map = frozen_lake_maps["3x6"] #Get the created map from config_games.py
+env = gym.make('FrozenLake-v1', desc=my_map, render_mode="human") # try for different environments
 observation = env.reset()
 timesteps = 100
 
