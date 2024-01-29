@@ -12,4 +12,8 @@ Instalar OpenAI Gym (and other libraries)
     pip install gym[classic_control]
     pip install matplotlib
     pip install 'gym[all]'
+
+Instalar Visualização de Grafos:
+    pip install networkx
+    pip install graphviz
     
