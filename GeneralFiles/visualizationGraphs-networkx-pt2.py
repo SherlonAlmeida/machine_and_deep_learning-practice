@@ -1,8 +1,8 @@
 #Reference: https://stackoverflow.com/questions/30035039/fix-position-of-subset-of-nodes-in-networkx-spring-graph
+#Description: Generates a graph representation and plot it with matplotlib, considering fixed positions.
 
 import networkx as nx 
 import matplotlib.pyplot as plt 
-
 
 G = nx.Graph()
 G.add_edges_from([(1,2),(2,3),(3,1),(1,4)]) #define G

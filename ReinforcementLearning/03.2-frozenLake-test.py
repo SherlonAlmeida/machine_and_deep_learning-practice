@@ -3,7 +3,7 @@ import numpy as np
 import random
 from config_games import *
 
-my_map = frozen_lake_maps["4x4"] #Get the created map from config_games.py
+my_map = frozen_lake_maps[CURR_MAP].copy() #Get the created map from config_games.py
 
 # 1. Load Environment and Q-table structure
 env = gym.make('FrozenLake-v1', desc=my_map, is_slippery=False, render_mode="human") # try for different environments
@@ -18,7 +18,7 @@ qtable = np.load("03-qtable_frozen_lake.npy")
 print(f"N size = {action_size}, N states = {state_size}")
 
 # 2.1 Parameters of Q-learning
-total_episodes = 5            # Total episodes
+total_episodes = 1            # Total episodes
 max_steps = 15                # Max steps per episode
 
 # 3. Q-learning Algorithm

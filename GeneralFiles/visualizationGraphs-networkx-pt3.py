@@ -1,4 +1,5 @@
 #Reference: https://www.geeksforgeeks.org/directed-graphs-multigraphs-and-visualization-in-networkx/
+#Description: Generates a DiGraph representation and plot it with matplotlib.
 
 import networkx as nx 
 import matplotlib.pyplot as plt 

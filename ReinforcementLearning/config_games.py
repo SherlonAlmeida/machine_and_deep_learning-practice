@@ -6,5 +6,11 @@ frozen_lake_maps = {"4x4": ["SFFF",
                             "HFFG"],
                     "3x6": ["HFFFHS",
                             "GFHFHF",
-                            "FFHFFF"]
+                            "FFHFFF"],
+                    "2x8": ["SFFFHHHH",
+                            "HHHFFFFG"],
+                    "2x3": ["SFF",
+                            "FFG"]
                     }
+#The global variable that defines the map to be explored
+CURR_MAP = "4x4"

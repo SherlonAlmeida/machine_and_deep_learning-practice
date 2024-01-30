@@ -1,4 +1,5 @@
 #Reference: https://www.geeksforgeeks.org/visualize-graphs-in-python/
+#Description: Generates a graph representation and plot it with matplotlib.
 
 import networkx as nx 
 import matplotlib.pyplot as plt 

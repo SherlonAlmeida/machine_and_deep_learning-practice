@@ -14,7 +14,6 @@ class Node():
     def __eq__(self, other):
         return self.position == other.position
 
-
 def astar(maze, start, end):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
@@ -97,19 +96,16 @@ def astar(maze, start, end):
             # Add the child to the open list
             open_list.append(child)
 
-def main():
+#Set the desired matrix (Grid/Maze), where: 0-Frozen, 1-Hole.
+maze = [[0, 0, 0, 0],
+        [0, 1, 0, 1],
+        [0, 0, 0, 1],
+        [1, 0, 0, 0]]
 
-    maze = [[0, 0, 0, 0],
-            [0, 1, 0, 1],
-            [0, 0, 0, 1],
-            [1, 0, 0, 0]]
+#Set the Source (start) and target (end)
+start = (0, 0)
+end = (3, 3)
 
-    start = (0, 0)
-    end = (3, 3)
-
-    path = astar(maze, start, end)
-    print(path)
-
-
-if __name__ == '__main__':
-    main()
+#Execute A* algorithm to find the shortest-path.
+path = astar(maze, start, end)
+print(path)

@@ -12,7 +12,7 @@ import numpy as np
 import random
 from config_games import *
 
-my_map = frozen_lake_maps["4x4"] #Get the created map from config_games.py
+my_map = frozen_lake_maps[CURR_MAP].copy() #Get the created map from config_games.py
 
 # 1. Load Environment and Q-table structure
 env = gym.make('FrozenLake-v1', desc=my_map, is_slippery=False) # try for different environments

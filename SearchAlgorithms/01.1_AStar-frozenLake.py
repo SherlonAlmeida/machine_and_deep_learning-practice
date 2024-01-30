@@ -1,6 +1,5 @@
 #Referência: https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
 
-import gym
 import numpy as np
 from config_games import *
 
@@ -100,17 +99,6 @@ def astar(maze, start, end, possible_actions):
             # Add the child to the open list
             open_list.append(child)
 
-"""Pré-processa o mapa de entrada para o Frozen-lake para que seja no formato de zeros e uns"""
-def preprocess_map(my_map):
-    for i, rows in enumerate(my_map):
-        my_map[i] = list(my_map[i])
-        for j, column in enumerate(my_map[i]):
-            if column == "H":
-                my_map[i][j] = 1
-            else:
-                my_map[i][j] = 0
-    return my_map
-
 """Dado uma matriz de coordenadas 2D, retorna as posições em 1D"""
 def get_path_1D(path_2D, m, n):
     path_1D = []
@@ -119,57 +107,29 @@ def get_path_1D(path_2D, m, n):
         p = i*n+j
         path_1D.append(p)
     return path_1D
-
-"""Converte o caminho em movimentos ◀️LEFT=0, 🔽DOWN=1, ▶️RIGHT=2, 🔼UP=3"""
-def get_moves_from_path(path_2D):
-    moves = []
-    for idx in range(len(path_2D)-1):
-        curr_state_x, curr_state_y = path_2D[idx]
-        next_state_x, next_state_y = path_2D[idx+1]
-        if (next_state_x > curr_state_x):
-            print("Baixo")
-            moves.append(1)
-        elif (next_state_x < curr_state_x):
-            print("Cima")
-            moves.append(3)
-        elif (next_state_y > curr_state_y):
-            print("Direita")
-            moves.append(2)
-        elif (next_state_y < curr_state_y):
-            print("Esquerda")
-            moves.append(0)
-    return moves
     
-
-maze = frozen_lake_maps["4x4"].copy() #Get the created map from config_games.py
+#Set the desired matrix (Grid/Maze), where: 0-Frozen, 1-Hole.
+maze = frozen_lake_maps[CURR_MAP].copy() #Get the created map from config_games.py
 maze = preprocess_map(maze)  #Get the "0's and 1's" map formatted
 
 #Actions:          ◀️LEFT=0, 🔽DOWN=1, ▶️RIGHT=2, 🔼UP=3
 possible_actions = [(-1, 0),  (0, -1),    (1, 0),   (0, 1)]
 m, n = len(maze), len(maze[0]) # Get the map's dimensionality 
-start = (0, 0)
-end = (3, 3)
 
+#Set the Source (start) and target (end)
+start, end = get_start_and_goal(frozen_lake_maps[CURR_MAP].copy(), get_1D=False)
+
+#Execute A* algorithm to find the shortest-path.
 #Caminho em coordenadas (x, y)
 path_2D = astar(maze, start, end, possible_actions)
-print(path_2D)
+print("Path 2D:", path_2D)
 
 #Caminho em coordenadas (i*y+j)
 path_1D = get_path_1D(path_2D, m, n)
-print(path_1D)
+print("Path 1D:", path_1D)
 
 #Movimentos necessários considerando ◀️ LEFT = 0, 🔽 DOWN = 1, ▶️ RIGHT = 2, 🔼 UP = 3
 next_moves = get_moves_from_path(path_2D)
 
 #Testa o caminho aprendido com o A*
-my_map = frozen_lake_maps["4x4"] #Get the created map from config_games.py
-env = gym.make('FrozenLake-v1', desc=my_map, is_slippery=False, render_mode="human") # try for different environments
-state, _ = env.reset()
-
-for t, action in enumerate(next_moves):
-    observation, reward, done, info, _ = env.step(action)
-    print (t, action, observation, reward, done, info)
-    
-    if done:
-        print("Finished after {} timesteps".format(t+1))
-        break
+render_path_found(next_moves)
