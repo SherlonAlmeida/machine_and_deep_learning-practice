@@ -1,0 +1,2 @@
+O Jogador 2 está com a IA inicial de Teste;
+O Jogador 1 está com a IA final da Competição;

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Jogo das Bactérias!</title>
+        <style>
+            canvas{
+                border:2px solid #FF0000;
+                background-color: #FFFFFF;
+            }
+
+            body{
+                background-color: #000000;
+            }
+        </style>
+        <script>
+            /*  
+             /* Sistema de coordenadas usado
+             /*   (0,0)_____________________ +x
+             /*       |
+             /*       |           90º
+             /*       |           |
+             /*       |           |
+             /*       | 180º -----+----- 0 ou 360º
+             /*       |           |                
+             /*       |           |           
+             /*       |          270º              
+             /*       |     
+             /*      +y
+             /*   
+             /* Coordenadas (x,y) representam o centro da bacteria
+             /*  
+             /* Cores proibidas para sua bactéria:
+             /* #000000
+             /* #FFFFFF
+             /* #00FF00
+             /*        
+             /* */
+            function Bacteria(nome, x, y, direcao, cor, contexto) {
+                /* constantes proibidas */
+                this.TAMANHO_MINIMO = 20;
+                this.DEBUG = false;
+                /* variáveis proibidas */
+                this.nome = nome;
+                this.x = x; //arredondado para o inteiro mais próximo para ser usado como coordenada
+                this.y = y;
+                this.xd = x; //double para ser usado nos cálculos
+                this.yd = y;
+                this.direcao = direcao; //em graus
+                this.cor = cor;
+                this.contexto = contexto;
+                this.tamanho = 20;
+                this.velocidade = 0;
+                this.turbo = false;
+                this.toxico = false;
+                this.inicioDoTurbo = 0;
+                this.inicioDaToxina = 0;
+                this.inimigo = null;
+
+                /* método proibido */
+                this.registrarInimigo = function (inimigo) {
+                    this.inimigo = inimigo;
+                }
+
+                /* método proibido */
+                this.desenhar = function () {
+                    this.contexto.beginPath();
+                    this.contexto.arc(this.x, this.y, this.tamanho, 0, 2 * Math.PI);
+                    this.contexto.fillStyle = this.cor;
+                    this.contexto.fill();
+                    if (this.toxico) {
+                        this.contexto.beginPath();
+                        this.contexto.arc(this.x, this.y, Math.round(this.tamanho / 2), 0, 2 * Math.PI);
+                        this.contexto.fillStyle = "#000000";
+                        this.contexto.fill();
+                    }
+                }
+
+                /* método proibido */
+                this.atualizar = function () {
+                    /* controla duração de toxicidade */
+                    if (this.toxico) {
+                        if ((Date.now() - this.inicioDaToxina) >= 2000) {
+                            this.toxico = false;
+                        }
+                    }
+
+                    /* ajusta a velocidade */
+                    if (this.turbo) {
+                        this.velocidade = (100 / this.tamanho) * 2;
+                        /* verifica se tem que terminar o turbo (passou 4 segundos) */
+                        if ((Date.now() - this.inicioDoTurbo) >= 4000) {
+                            this.turbo = false;
+                        }
+                    } else {
+                        this.velocidade = 100 / this.tamanho;
+                    }
+
+                    this.xd += Math.cos(this.direcao * Math.PI / 180) * this.velocidade;
+                    this.yd -= Math.sin(this.direcao * Math.PI / 180) * this.velocidade;
+
+                    /* manter nos limites da tela */
+                    if (this.xd < 0) {
+                        this.xd = 0;
+                    }
+                    if (this.xd > 800) {
+                        this.xd = 800;
+                    }
+                    if (this.yd < 0) {
+                        this.yd = 0;
+                    }
+                    if (this.yd > 600) {
+                        this.yd = 600;
+                    }
+
+                    /* atualizar valores usados para desenho */
+                    this.x = Math.round(this.xd);
+                    this.y = Math.round(this.yd);
+                }
+
+                /* método proibido */
+                this.encolher = function () {
+                    if (this.tamanho > this.TAMANHO_MINIMO) {
+                        this.tamanho -= 1;
+                    }
+                }
+
+                /* método proibido */
+                this.comendo = function (comida) {
+                    if (Math.sqrt(Math.pow(this.x - comida.x, 2) + Math.pow(this.y - comida.y, 2))
+                            <= (this.tamanho - comida.TAMANHO)) {
+                        return true;
+                    }
+                    return false;
+                }
+
+
+
+
+                /* VOCÊ SÓ PODE USAR OS MÉTODOS DAQUI */
+
+                /* Perde 1/4 do tamanho para dobrar a velocidade por 4 segundos
+                 * sem parâmetros ou retorno 
+                 * @return boolean (se acionou com sucesso ou não) */
+                this.acionarTurbo = function () {
+                    /* se não tem tamanho mínimo para usar turbo OU se já está ativo */
+                    if (this.tamanho < (this.TAMANHO_MINIMO * 3 / 4) || this.turbo) {
+                        return false;
+                    }
+                    this.turbo = true;
+                    this.inicioDoTurbo = Date.now();
+                    this.tamanho = Math.round(this.tamanho * 3 / 4);
+                    return true;
+                }
+
+                /* Se torna tóxico (reduzindo tamanho do oponente ao contato por
+                 * 2 segundos - tem 10 segundos de intervalo mínimo entre usos) 
+                 * @return boolean (se acionou com sucesso ou não) */
+                this.acionarToxina = function () {
+                    /* se ainda está no intervalo de 10 segundos do último acionamento OU se já está ativo */
+                    if ((Date.now() - this.inicioDaToxina) < 10000 || this.toxico) {
+                        return false;
+                    }
+                    this.toxico = true;
+                    this.inicioDaToxina = Date.now();
+                    return true;
+                }
+
+                /* @param inteiro entre 0 e 360 */
+                this.direcionar = function (angulo) {
+                    while (angulo > 360) {
+                        angulo -= 360;
+                    }
+                    while (angulo < 0) {
+                        angulo += 360;
+                    }
+                    this.direcao = angulo;
+                }
+
+                this.meuX = function () {
+                    return this.x;
+                }
+
+                this.meuY = function () {
+                    return this.y;
+                }
+
+                /* @return inteiro entre 0 e 360 */
+                this.meuAngulo = function () {
+                    return this.direcao;
+                }
+
+                /* @return inteiro */
+                this.meuTamanho = function () {
+                    return this.tamanho;
+                }
+
+                /* @return real */
+                this.minhaVelocidade = function () {
+                    return this.velocidade;
+                }
+
+                /* @return boolean */
+                this.meuTurbo = function () {
+                    return this.turbo;
+                }
+
+                /* @return boolean */
+                this.meuToxico = function () {
+                    return this.toxico;
+                }
+
+                /* Usa o centro das figuras como referência
+                 * @return real (ou Number.MAX_VALUE se não houver comidas) */
+                this.distanciaDaComidaMaisProxima = function () {
+                    var menorDistancia = Number.MAX_VALUE;
+                    for (var i = 0; i < comida.length; i++) {
+                        if (!comida[i].vivo) {
+                            continue;
+                        }
+                        if (Math.sqrt(Math.pow(this.x - comida[i].x, 2) + Math.pow(this.y - comida[i].y, 2))
+                                < menorDistancia) {
+                            menorDistancia = Math.sqrt(Math.pow(this.x - comida[i].x, 2) + Math.pow(this.y - comida[i].y, 2));
+                        }
+                    }
+                    return menorDistancia;
+                }
+
+                /* @return inteiro entre 0 e 360 (ou -1 se não houver comidas) */
+                this.anguloDaComidaMaisProxima = function () {
+                    var menorDistancia = this.distanciaDaComidaMaisProxima();
+                    for (var i = 0; i < comida.length; i++) {
+                        if (!comida[i].vivo) {
+                            continue;
+                        }
+                        if (Math.sqrt(Math.pow(this.x - comida[i].x, 2) + Math.pow(this.y - comida[i].y, 2))
+                                === menorDistancia) {
+                            return Math.round(180 - (Math.atan2(this.y - comida[i].y, this.x - comida[i].x) * 180 / Math.PI));
+                        }
+                    }
+                    return -1;
+                }
+
+                /* Usa o centro dos círculos como referência
+                 * @return real */
+                this.distanciaDoInimigo = function () {
+                    return (Math.sqrt(Math.pow(this.x - this.inimigo.x, 2) + Math.pow(this.y - this.inimigo.y, 2)));
+                }
+
+                /* @return inteiro entre 0 e 360 */
+                this.anguloDoInimigo = function () {
+                    return Math.round(180 - (Math.atan2(this.y - this.inimigo.y, this.x - this.inimigo.x) * 180 / Math.PI));
+                }
+
+                /* @return inteiro */
+                this.tamanhoDoInimigo = function () {
+                    return this.inimigo.tamanho;
+                }
+
+                /* @return real */
+                this.velocidadeDoInimigo = function () {
+                    return this.inimigo.velocidade;
+                }
+
+                /* @return boolean */
+                this.toxicoInimigo = function () {
+                    return this.inimigo.toxico;
+                }
+
+                /* Usa o centro do círculo como referência
+                 * @param String [inferior, superior, esquerda, direita]
+                 * @return real (-1 se for passado uma parede inválida) */
+                this.distanciaAteUmaParede = function (parede) {
+                    switch (parede) {
+                        case "inferior":
+                            return (600 - this.y);
+                        case "superior":
+                            return (this.y);
+                        case "esquerda":
+                            return (this.x);
+                        case "direita":
+                            return (800 - this.x);
+                        default:
+                            return -1;
+                    }
+                }
+
+                /* @return inteiro [0,90,180,270] */
+                this.anguloDaParedeMaisProxima = function () {
+                    var inferior = this.distanciaAteUmaParede("inferior");
+                    var superior = this.distanciaAteUmaParede("superior");
+                    var esquerda = this.distanciaAteUmaParede("esquerda");
+                    var direita = this.distanciaAteUmaParede("direita");
+                    if (inferior <= superior && inferior <= esquerda && inferior <= direita) {
+                        return 270;
+                    } else if (superior <= inferior && superior <= esquerda && superior <= direita) {
+                        return 90;
+                    } else if (esquerda <= inferior && esquerda <= inferior && esquerda <= direita) {
+                        return 180;
+                    } else {
+                        return 0;
+                    }
+                }
+
+                /* @param nome */
+                this.mudarNome = function (nome) {
+                    this.nome = nome;
+                }
+
+                /* @return String */
+                this.meuNome = function () {
+                    return this.nome;
+                }
+
+                /* FIM DOS MÉTODOS QUE VOCÊ PODE USAR */
+            }
+        </script>
+
+        <script>
+            /* !!!tudo aqui é proibido!!! */
+            function Comida(contexto) {
+                this.TAMANHO = 5;
+                this.xd = Math.random() * 700 + 50;
+                this.yd = Math.random() * 500 + 50;
+                this.x = Math.round(this.xd);
+                this.y = Math.round(this.yd);
+                this.vivo = true;
+                this.cor = "#009900";
+                this.contexto = contexto;
+                this.desenhar = function () {
+                    this.contexto.beginPath();
+                    this.contexto.arc(this.x, this.y, this.TAMANHO, 0, 2 * Math.PI);
+                    this.contexto.fillStyle = this.cor;
+                    this.contexto.fill();
+                }
+            }
+        </script>
+
+        <script>
+            /* !!!tudo aqui é proibido!!! */
+            function limpar(contexto) {
+                contexto.clearRect(0, 0, 800, 600);
+            }
+
+            /* !!!tudo aqui é proibido!!! */
+            function popular(contexto) {
+                comida.push(new Comida(contexto));
+            }
+
+            /* !!!tudo aqui é proibido!!! */
+            function loop(contexto) {
+                limpar(contexto);
+                /* escolhe aleatoriamente quem atualizar primeiro */
+                if (Math.random() > 0.5) {
+                    jogador1.atualizar();
+                    jogador1.desenhar();
+                    jogador2.atualizar();
+                    jogador2.desenhar();
+                } else {
+                    jogador2.atualizar();
+                    jogador2.desenhar();
+                    jogador1.atualizar();
+                    jogador1.desenhar();
+                }
+
+                /* é hora de rodar a IA? (a cada 250ms) */
+                if ((Date.now() - ultimaVezDaIA) >= 250) {
+                    /* escolhe aleatoriamente quem pensa primeiro */
+                    if (Math.random() > 0.5) {
+                        jogador1.ia(ultimaVezDaIA);
+                        jogador2.ia(ultimaVezDaIA);
+                    } else {
+                        jogador2.ia(ultimaVezDaIA);
+                        jogador1.ia(ultimaVezDaIA);
+                    }
+                    ultimaVezDaIA = Date.now();
+                }
+
+                /* semissobreposição com toxicidade acionada */
+                if (Math.sqrt(Math.pow(jogador1.x - jogador2.x, 2) + Math.pow(jogador1.y - jogador2.y, 2))
+                        <= (jogador1.tamanho + jogador2.tamanho)) {
+                    if (jogador1.toxico) {
+                        jogador2.encolher();
+                    }
+                    if (jogador2.toxico) {
+                        jogador1.encolher();
+                    }
+                }
+
+                /* se os jogadores estão sobrepostos */
+                if (Math.sqrt(Math.pow(jogador1.x - jogador2.x, 2) + Math.pow(jogador1.y - jogador2.y, 2))
+                        <= (Math.max(jogador1.tamanho, jogador2.tamanho) - Math.min(jogador1.tamanho, jogador2.tamanho))) {
+                    /* verifica quem ganhou */
+                    if (jogador1.tamanho > jogador2.tamanho) {
+                        document.getElementById("saida").innerHTML = jogador1.nome + " ganhou!";
+                    } else if (jogador2.tamanho > jogador1.tamanho) {
+                        document.getElementById("saida").innerHTML = jogador2.nome + " ganhou!";
+                    } else {
+                        document.getElementById("saida").innerHTML = "Impressionante! Deu empate!";
+                    }
+                    /* termina o loop do jogo e o preenchimento com comida */
+                    clearInterval(timer1);
+                    clearInterval(timer2);
+                    /* não faz mais nada */
+                    return 0;
+                }
+
+                /* colisões entre jogadores e comidas, desenha comidas */
+                for (var i = 0; i < comida.length; i++) {
+                    /* escolhe aleatoriamente quem come primeiro */
+                    if (Math.random() > 0.5) {
+                        if (comida[i].vivo && jogador1.comendo(comida[i])) {
+                            comida[i].vivo = false;
+                            jogador1.tamanho += 5;
+                        }
+                        if (comida[i].vivo && jogador2.comendo(comida[i])) {
+                            comida[i].vivo = false;
+                            jogador2.tamanho += 5;
+                        }
+                    } else {
+                        if (comida[i].vivo && jogador2.comendo(comida[i])) {
+                            comida[i].vivo = false;
+                            jogador2.tamanho += 5;
+                        }
+                        if (comida[i].vivo && jogador1.comendo(comida[i])) {
+                            comida[i].vivo = false;
+                            jogador1.tamanho += 5;
+                        }
+                    }
+
+                    /* desenha a comida se ainda existir */
+                    if (comida[i].vivo) {
+                        comida[i].desenhar();
+                    }
+                }
+
+                /* manutenção de memória se houver muitos objetos */
+                if (comida.length > 50) {
+                    var comidaViva = [];
+                    for (var i = 0; i < comida.length; i++) {
+                        if (comida[i].vivo) {
+                            comidaViva.push(comida[i]);
+                        }
+                    }
+                    comida = comidaViva;
+                }
+            }
+        </script>
+    </head>
+
+    <body>
+        <canvas id="campo" width="800" height="600"></canvas>
+        <h1 id="saida" style="color:#FFFFFF;">DEVORE O QUE PUDER!</h1>
+        <script>
+            /* os nomes e as cores das bactérias podem ser alterados (cuidado 
+             * com cores proibidas indicadas no começo do documento) */
+            var jogador1 = new Bacteria("Jogador 1", 100, 300, 0, "#FF0000", document.getElementById("campo").getContext("2d"));
+            var jogador2 = new Bacteria("Jogador 2", 700, 300, 180, "#000099", document.getElementById("campo").getContext("2d"));
+            jogador1.registrarInimigo(jogador2);
+            jogador2.registrarInimigo(jogador1);
+
+            var comida = [];
+        </script>
+
+        <script src="jogador1.js"></script>
+        <script src="jogador2.js"></script>
+
+        <script>
+            var timer1 = setInterval(loop, 30, document.getElementById("campo").getContext("2d"));
+            var timer2 = setInterval(popular, 500, document.getElementById("campo").getContext("2d"));
+            var ultimaVezDaIA = 0;
+        </script>
+    </body>
+</html>
